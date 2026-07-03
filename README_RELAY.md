@@ -2,7 +2,7 @@
 
 A low-cost laser power tester built around a Seeeduino XIAO SAMD21. It measures laser power by sensing how much a flat black copper slug heats up under the beam, using an NTC thermistor and displaying the result on a small OLED.
 
-![Wiring diagram](laser_tester_wiring_pwm.png)
+![Wiring diagram](laser_tester_wiring_relay.png)
 
 ## How it works
 
@@ -13,9 +13,9 @@ Power is derived from temperature in one of two ways (see [Calibration](#calibra
 - **Steady-state**: `P = (T − T_ambient) / R_thermal`
 - **Transient**: `P = m × c_p × (dT/dt)` — useful for single pulses
 
-The power display is currently stubbed out pending calibration of your specific slug; see the TODO block in `laser_tester.ino`.
+The power display is currently stubbed out pending calibration of your specific slug; see the TODO block in `laser_tester_relay.ino`.
 
-D7 drives the laser module's TTL PWM input directly through a 100 Ω series resistor, with a 10 kΩ pull-down to GND to hold the input low during boot. `analogWrite` on D7 can step power levels for calibration curves.
+A 12 V SPST relay (switched by a 2N2222 via D7) controls the laser, allowing software-timed exposures.
 
 ## Parts
 
@@ -26,8 +26,7 @@ D7 drives the laser module's TTL PWM input directly through a 100 Ω series resi
 | Reference resistor | 10 kΩ 1% metal-film |
 | Absorber | Flat black-coated copper slug |
 | Display | SSD1306 128×64 I²C OLED |
-| Laser | TTL PWM module (12 V, GND, PWM pins) |
-| Laser wiring | 100 Ω series resistor (D7 → PWM in), 10 kΩ pull-down (PWM in → GND) |
+| Laser switch | 12 V SPST relay, 2N2222, 1N4001, 1 kΩ |
 | Power | 12 V DC (2.1 mm barrel), 5 V buck converter |
 
 ## Wiring
@@ -38,11 +37,11 @@ D7 drives the laser module's TTL PWM input directly through a 100 Ω series resi
 | A0 | NTC / 10 kΩ junction |
 | SDA | OLED SDA |
 | SCL | OLED SCL |
-| D7 | 100 Ω → laser PWM input (10 kΩ pull-down on PWM in to GND) |
+| D7 | 1 kΩ → 2N2222 base (relay driver) |
 | 5V/VIN | 5 V buck output |
 | GND | Common ground |
 
-12 V feeds both the buck converter and the laser module. An SPST switch on the 12 V line acts as a master power cut-off.
+12 V feeds both the buck converter and the relay/laser circuit. An SPST switch on the 12 V line acts as a master power cut-off.
 
 ## Assembly
 
