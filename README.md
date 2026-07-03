@@ -15,7 +15,7 @@ Power is derived from temperature in one of two ways (see [Calibration](#calibra
 
 The power display is currently stubbed out pending calibration of your specific slug; see the TODO block in `laser_tester.ino`.
 
-D7 drives the laser module's TTL PWM input directly through a 100 Ω series resistor, with a 10 kΩ pull-down to GND to hold the input low during boot. `analogWrite` on D7 can step power levels for calibration curves.
+D6 drives the laser module's TTL PWM input directly through a 100 Ω series resistor, with a 10 kΩ pull-down to GND to hold the input low during boot. `analogWrite` on D6 can step power levels for calibration curves.
 
 ## Parts
 
@@ -29,7 +29,7 @@ D7 drives the laser module's TTL PWM input directly through a 100 Ω series resi
 | Laser | TTL PWM module (12 V, GND, PWM pins) |
 | Laser wiring | 100 Ω series resistor (D7 → PWM in), 10 kΩ pull-down (PWM in → GND) |
 | Power | 12 V DC (2.1 mm barrel), 5 V buck converter |
-
+| Momentary switch | Dead man's switch, must hold it for laser to fire |
 ## Wiring
 
 | XIAO pin | Connects to |
@@ -38,11 +38,13 @@ D7 drives the laser module's TTL PWM input directly through a 100 Ω series resi
 | A0 | NTC / 10 kΩ junction |
 | SDA | OLED SDA |
 | SCL | OLED SCL |
-| D7 | 100 Ω → laser PWM input (10 kΩ pull-down on PWM in to GND) |
+| D6 | 100 Ω → laser PWM input (10 kΩ pull-down on PWM in to GND) |
+| D7 | Momentary switch -> GND | 
 | 5V/VIN | 5 V buck output |
 | GND | Common ground |
 
 12 V feeds both the buck converter and the laser module. An SPST switch on the 12 V line acts as a master power cut-off.
+D7 connects through a momentary switch to ground. The switch must be held down for the laser to fire. If the switch is released the laser will cease to fire.
 
 ## Assembly
 
