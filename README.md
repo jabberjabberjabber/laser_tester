@@ -37,7 +37,7 @@ D6 drives the laser module's TTL PWM input directly through a 100 Ω series resi
 | SDA | OLED SDA |
 | SCL | OLED SCL |
 | D6 | 100 Ω → laser PWM input (10 kΩ pull-down on PWM in to GND) |
-| D7 | Momentary switch -> GND | 
+| D7 | Momentary switch → GND | 
 | 5V/VIN | 5 V buck output |
 | GND | Common ground |
 
