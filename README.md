@@ -12,7 +12,7 @@ Power is derived from temperature (see [Calibration](#calibration)):
 
 - `P = (T − T_ambient) / R_thermal`
 
-D6 drives the laser module's TTL PWM input directly through a 100 Ω series resistor, with a 10 kΩ pull-down to GND to hold the input low during boot. `analogWrite` on D6 can step power levels for calibration curves.
+D6 drives the laser module's TTL PWM input directly through a 100 Ω series resistor, with a 10 kΩ pull-down to GND to hold the input low during boot. 
 
 ## Parts
 
