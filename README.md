@@ -10,7 +10,7 @@ The copper slug is coated black to maximise absorption. An NTC thermistor is bon
 
 Power is derived from temperature (see [Calibration](#calibration)):
 
-- **Steady-state**: `P = (T − T_ambient) / R_thermal`
+- `P = (T − T_ambient) / R_thermal`
 
 D6 drives the laser module's TTL PWM input directly through a 100 Ω series resistor, with a 10 kΩ pull-down to GND to hold the input low during boot. `analogWrite` on D6 can step power levels for calibration curves.
 
