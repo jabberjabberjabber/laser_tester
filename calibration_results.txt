@@ -1,0 +1,7 @@
+t_ambient (C), T_steady (C), Voltage (V), Amps (A), Resistance (R), Power (W), R_thermal
+26.75, 33.7, 12.12, 0.1212, 97, 1.469, 4.73 
+26.76, 38, 15.1, 0.159, 97, 2.4, 4.68
+27.00, 46, 19.9, 0.2, 97, 3.99, 4.76
+
+**R_thermal = (T_steady − T_ambient) / P**   (units: °C per watt)
+  

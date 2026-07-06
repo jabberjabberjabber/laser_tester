@@ -1,12 +1,8 @@
 /*
  * Laser power tester — NTC readout stage
- * Board:  Seeeduino XIAO (SAMD21)
- * Sensor: 10k NTC (beta ~3950) in a metal lug, bonded to Vantablack copper slug
  * Wiring: 3V3 --- NTC --- A0 --- 10k(1%) --- GND
- *         Divider runs off 3V3 so it's ratiometric with the ADC reference
- * Display: SSD1306 I2C OLED
- * Laser:  TTL module — 12V + GND from supply, PWM input driven from D7
- *         100R series on D7 -> PWM in; 10K pull-down on PWM in to GND
+ * Laser:  TTL module — 12V + GND from supply, PWM input driven from D6
+ *         100R series on D6-> PWM in; 10K pull-down on PWM in to GND
  */
 
 #include <Wire.h>
@@ -14,64 +10,70 @@
 #include <Adafruit_SSD1306.h>
 #include <math.h>
 
-// ---- divider / NTC constants ----
-const float R_FIXED = 10000.0;   // 1% metal-film resistor, 10K ohms
-const float R0      = 10000.0;   // NTC resistance at T0
-const float T0_K    = 298.15;    // 25 C in kelvin
-const float BETA    = 3950.0;    // NTC beta — CALIBRATE THIS (see notes)
+const float R_FIXED = 10000.0;
+const float R0      = 10000.0;
+const float T0_K    = 298.15; 
+const float BETA    = 3950.0; 
 const int   ADC_MAX = 4095;      // 12-bit
 
-// ---- OLED ----
+//   find R_thermal by calibration    
+const float R_THERMAL = 4.72;
+const float T_AMBIENT = 26.75;
+
 #define SCREEN_W 128
-#define SCREEN_H 64              // use 32 if 128x32
+#define SCREEN_H 64
 #define OLED_ADDR 0x3C
 Adafruit_SSD1306 display(SCREEN_W, SCREEN_H, &Wire, -1);
 
-// ---- laser ----
 #define LASER_PIN   6
-#define SAFETY_PIN  7   // dead man's switch: hold to fire, release to stop
+#define SAFETY_PIN  7
 
-// ---- averaging ----
 const int N_AVG = 32;
+
+// Global variables for tracking
+float max_power_W = 0.0;
+unsigned long fireStartTime = 0;
 
 float readNTC_ohms() {
   long acc = 0;
-  for (int i = 0; i < N_AVG; i++) { acc += analogRead(A0); delay(2); }
+  for (int i = 0; i < N_AVG; i++) { 
+    acc += analogRead(A0); 
+    delay(2); 
+  }
   float adc = (float)acc / N_AVG;
 
-  // guard rails: open/short sensor
-  if (adc < 1)        return -1.0;        // junction at GND -> NTC open
-  if (adc > ADC_MAX-1) return -2.0;       // junction at rail -> NTC short
+  if (adc < 1)        return -1.0;      
+  if (adc > ADC_MAX-1) return -2.0;
 
-  // 3V3 -- NTC -- A0 -- Rfixed -- GND
-  // adc/ADC_MAX = Rfixed / (Rntc + Rfixed)   (Vref cancels, ratiometric)
   return R_FIXED * ((ADC_MAX - adc) / adc);
 }
 
 float ohmsToC(float r) {
-  // beta equation: 1/T = 1/T0 + (1/beta)*ln(R/R0)
   float invT = 1.0 / T0_K + (1.0 / BETA) * log(r / R0);
   return (1.0 / invT) - 273.15;
 }
 
 void setup() {
-  analogReadResolution(12);      // SAMD21 supports 12-bit
-  // AR_DEFAULT (VDDANA) is already ratiometric with the 3V3 divider — leave it.
+  analogReadResolution(12);
 
   pinMode(LASER_PIN, OUTPUT);
-  digitalWrite(LASER_PIN, LOW);  // keep low until intentionally fired
+  digitalWrite(LASER_PIN, LOW); 
 
-  pinMode(SAFETY_PIN, INPUT_PULLUP);  // button: GND when held, floating otherwise
+  pinMode(SAFETY_PIN, INPUT_PULLUP);
 
   Wire.begin();
   display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
   display.display();
+  
+  // Initialize trackers
+  max_power_W = 0.0;
+  fireStartTime = 0;
 }
 
 void loop() {
-  bool fire = (digitalRead(SAFETY_PIN) == LOW);  // held down = fire
+  bool fire = (digitalRead(SAFETY_PIN) == LOW);
   digitalWrite(LASER_PIN, fire ? HIGH : LOW);
 
   float r = readNTC_ohms();
@@ -83,33 +85,65 @@ void loop() {
     display.setTextSize(1);
     display.println("NTC fault");
     display.println(r == -1.0 ? "open?" : "short?");
-  } else {
-    float c = ohmsToC(r);
-
-    display.setTextSize(1);
-    display.print("R: "); display.print(r, 0); display.println(" ohm");
-
-    display.setTextSize(2);
-    display.setCursor(0, 20);
-    display.print(c, 2); display.println(" C");
-
-    display.setTextSize(1);
-    display.setCursor(0, 48);
-    display.println(fire ? "*** LASER ON ***" : "hold btn to fire");
-
-    // ---- TODO: power stage ----
-    // Transient (single laser pulse into an insulated slug):
-    //   P = m * c_p * (dT/dt)
-    //   copper c_p = 385 J/kg/K; m = slug mass in kg; dT/dt from timestamps.
-    // Steady-state (continuous beam, slug losing heat to ambient):
-    //   P = (T - T_ambient) / R_thermal
-    //   find R_thermal by a known-power calibration first.
-    // Uncomment once you've measured your slug.
-    //
-    // display.setTextSize(1);
-    // display.setCursor(0, 48);
-    // display.print(power_W, 2); display.println(" W");
+    display.display();
+    delay(200);
+    return;
   }
+
+  float c = ohmsToC(r);
+  
+  // Calculate current power
+  float power_W = (c - T_AMBIENT) / R_THERMAL;
+
+  // Update Max Wattage ONLY if laser is currently firing and power is higher
+  if (fire && power_W > max_power_W) {
+    max_power_W = power_W;
+  }
+
+  // Calculate Timer
+  unsigned long elapsedMs = 0;
+  if (fire) {
+    if (fireStartTime == 0) fireStartTime = millis(); // Start timer on first fire
+    elapsedMs = millis() - fireStartTime;
+  } else {
+    // If laser is off, you can choose to:
+    // 1. Keep timer running (until reset)
+    // 2. Stop timer. 
+    // Here we keep it running until reset, or you can set fireStartTime=0 to reset.
+    // To reset timer when laser turns OFF, uncomment the next line:
+    fireStartTime = 0; 
+  }
+
+  int totalSeconds = (int)(elapsedMs / 1000);
+  int minutes = totalSeconds / 60;
+  int seconds = totalSeconds % 60;
+
+  display.setTextSize(1);
+  display.print("R: "); 
+  display.print(r, 0); 
+  display.println(" ohm");
+
+  // Display Temp and Max Power on the same line
+  display.setCursor(0, 20);
+  display.print(c, 2); 
+  display.print(" C  ");
+  
+  // Print Max Power with "W MAX" label
+  display.print(max_power_W, 2);
+  display.print(" W MAX");
+
+  // Display Timer
+  display.setCursor(0, 48);
+  display.print("T: ");
+  if (minutes < 10) display.print("0");
+  display.print(minutes);
+  display.print(":");
+  if (seconds < 10) display.print("0");
+  display.print(seconds);
+
+  // Optional: Laser Status Indicator
+  display.setCursor(100, 48);
+  display.print(fire ? "ON" : "OFF");
 
   display.display();
   delay(200);

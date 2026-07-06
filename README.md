@@ -11,9 +11,6 @@ The copper slug is coated black to maximise absorption. An NTC thermistor is bon
 Power is derived from temperature in one of two ways (see [Calibration](#calibration)):
 
 - **Steady-state**: `P = (T − T_ambient) / R_thermal`
-- **Transient**: `P = m × c_p × (dT/dt)` — useful for single pulses
-
-The power display is currently stubbed out pending calibration of your specific slug; see the TODO block in `laser_tester.ino`.
 
 D6 drives the laser module's TTL PWM input directly through a 100 Ω series resistor, with a 10 kΩ pull-down to GND to hold the input low during boot. `analogWrite` on D6 can step power levels for calibration curves.
 
@@ -30,6 +27,7 @@ D6 drives the laser module's TTL PWM input directly through a 100 Ω series resi
 | Laser wiring | 100 Ω series resistor (D7 → PWM in), 10 kΩ pull-down (PWM in → GND) |
 | Power | 12 V DC (2.1 mm barrel), 5 V buck converter |
 | Momentary switch | Dead man's switch, must hold it for laser to fire |
+
 ## Wiring
 
 | XIAO pin | Connects to |

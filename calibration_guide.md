@@ -36,4 +36,4 @@ const float R_THERMAL = 8.7;   // measured value, C per W
 float power_W = (c - t_ambient) / R_THERMAL;
 ```
 
-For t_ambient, either take a reading at boot before the laser fires.
+
