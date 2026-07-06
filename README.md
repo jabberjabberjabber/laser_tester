@@ -8,7 +8,7 @@ A low-cost laser power tester built around a Seeeduino XIAO SAMD21. It measures 
 
 The copper slug is coated black to maximise absorption. An NTC thermistor is bonded to the slug and sits in a resistor divider with a 10 kΩ 1% reference resistor. The SAMD21's 12-bit ADC reads the divider ratiometrically (no reference voltage error) and converts the reading to temperature via the standard beta equation. Temperature is displayed live on the OLED.
 
-Power is derived from temperature in one of two ways (see [Calibration](#calibration)):
+Power is derived from temperature (see [Calibration](#calibration)):
 
 - **Steady-state**: `P = (T − T_ambient) / R_thermal`
 
