@@ -24,7 +24,7 @@ D6 drives the laser module's TTL PWM input directly through a 100 Ω series resi
 | Absorber | Flat black-coated copper slug |
 | Display | SSD1306 128×64 I²C OLED |
 | Laser | TTL PWM module (12 V, GND, PWM pins) |
-| Laser wiring | 100 Ω series resistor (D7 → PWM in), 10 kΩ pull-down (PWM in → GND) |
+| Laser wiring | 100 Ω series resistor (D6 → PWM in), 10 kΩ pull-down (PWM in → GND) |
 | Power | 12 V DC (2.1 mm barrel), 5 V buck converter |
 | Momentary switch | Dead man's switch, must hold it for laser to fire |
 
